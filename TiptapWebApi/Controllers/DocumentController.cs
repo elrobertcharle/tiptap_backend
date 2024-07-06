@@ -1,22 +1,45 @@
 using Microsoft.AspNetCore.Mvc;
 using DiffMatchPatch;
+using TiptapWebApi.Services;
+using System.Collections.Generic;
 
-[ApiController]
-[Route("document")]
-public class DocumentController : ControllerBase
+namespace TiptapWebApi.Controllers
 {
-    [HttpGet("test")]
-    public IActionResult Test()
+    [ApiController]
+    [Route("document")]
+    public class DocumentController : ControllerBase
     {
-        return Ok("ok");
-    }
+        private readonly IDocumentService _documentService;
+        public DocumentController(IDocumentService documentService)
+        {
+            ArgumentNullException.ThrowIfNull(documentService, nameof(documentService));
+            _documentService = documentService;
+        }
 
-    [HttpPost("apply-diffs")]
-    public async Task<IActionResult> ApplyDiff(int documentId, [FromBody] List<Patch> patches)
-    {
-        var document = "";
-        var dmp = new diff_match_patch();
-        dmp.patch_apply(patches, document);
-        return Ok();
+
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok("ok");
+        }
+
+        [HttpPatch("{documentId}")]
+        public async Task<IActionResult> ApplyPatches(int documentId)
+        {
+            if (!await _documentService.ExistsAsync(documentId))
+                return NotFound();
+
+            using StreamReader sr = new StreamReader(Request.Body);
+            var patchesStr = await sr.ReadToEndAsync();
+            await _documentService.UpdateAsync(documentId, patchesStr);
+            return Ok();
+        }
+
+        [HttpPost("{documentId}")]
+        public async Task<IActionResult> Create()
+        {
+            var documentId = await _documentService.CreateAsync();
+            return Ok(documentId);
+        }
     }
 }
