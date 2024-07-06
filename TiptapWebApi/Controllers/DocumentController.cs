@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using DiffMatchPatch;
 using TiptapWebApi.Services;
-using System.Collections.Generic;
 
 namespace TiptapWebApi.Controllers
 {
