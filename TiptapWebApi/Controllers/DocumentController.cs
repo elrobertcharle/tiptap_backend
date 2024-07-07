@@ -20,6 +20,7 @@ namespace TiptapWebApi.Controllers
         {
             if (!await _documentService.ExistsAsync(documentId))
                 return NotFound();
+
             return Ok(await _documentService.GetByIdAsync(documentId));
         }
 
@@ -40,11 +41,6 @@ namespace TiptapWebApi.Controllers
         {
             using StreamReader sr = new StreamReader(Request.Body);
             var content = await sr.ReadToEndAsync();
-
-            // just for testing
-            if (string.IsNullOrEmpty(content))
-                content = "{\"type\": \"doc\",\"content\": [{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"hello\"}]}]}";
-
             var documentId = await _documentService.CreateAsync(content);
             return Ok(documentId);
         }
