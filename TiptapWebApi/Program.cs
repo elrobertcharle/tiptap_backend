@@ -15,7 +15,19 @@ builder.Services.AddDbContext<DocumentDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontendApp", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000")
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
 
