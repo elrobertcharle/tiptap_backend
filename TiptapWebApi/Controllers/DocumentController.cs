@@ -15,10 +15,12 @@ namespace TiptapWebApi.Controllers
         }
 
 
-        [HttpGet("test")]
-        public IActionResult Test()
+        [HttpGet("{documentId}")]
+        public async Task<IActionResult> Get(int documentId)
         {
-            return Ok("ok");
+            if (!await _documentService.ExistsAsync(documentId))
+                return NotFound();
+            return Ok(await _documentService.GetByIdAsync(documentId));
         }
 
         [HttpPatch("{documentId}")]
@@ -42,7 +44,7 @@ namespace TiptapWebApi.Controllers
             // just for testing
             if (string.IsNullOrEmpty(content))
                 content = "{\"type\": \"doc\",\"content\": [{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"hello\"}]}]}";
-            
+
             var documentId = await _documentService.CreateAsync(content);
             return Ok(documentId);
         }

@@ -10,6 +10,7 @@ namespace TiptapWebApi.Services
         Task<int> CreateAsync(string content);
         Task UpdateAsync(int documentId, List<Patch> patches);
         Task UpdateAsync(int documentId, string patches);
+        Task<string> GetByIdAsync(int documentId);
     }
     public class DocumentService : IDocumentService
     {
@@ -27,7 +28,7 @@ namespace TiptapWebApi.Services
 
         public async Task<int> CreateAsync(string content)
         {
-            var document = new Database.Document
+            var document = new Document
             {
                 Content = content
             };
@@ -49,24 +50,16 @@ namespace TiptapWebApi.Services
         public async Task UpdateAsync(int documentId, string patches)
         {
             var dmp = new diff_match_patch();
-            var s1 = "hello";
-            var s2 = "hella";
-            var diff = dmp.diff_main(s1, s2);
-            dmp.diff_cleanupEfficiency(diff);
-            var patch = dmp.patch_make(s1, diff);
-            var content = (string)dmp.patch_apply(patch, s1)[0];
-            var patchStr = dmp.patch_toText(patch);
-            var patch2 = dmp.patch_fromText(patchStr);
+            await UpdateAsync(documentId, dmp.patch_fromText(patches));
 
-            try
-            {
+        }
 
-                await UpdateAsync(documentId, dmp.patch_fromText(patches));
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+        public async Task<string> GetByIdAsync(int documentId)
+        {
+            var document = await _dbContext.Documents.FindAsync(documentId);
+            if (document == null)
+                throw new InvalidOperationException($"The document with Id={documentId} does not exist.");
+            return document.Content;
         }
     }
 }
