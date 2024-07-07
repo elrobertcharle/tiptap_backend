@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using TiptapWebApi.Database;
+using TiptapWebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 builder.Services.AddControllers();
 

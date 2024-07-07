@@ -33,10 +33,17 @@ namespace TiptapWebApi.Controllers
             return Ok();
         }
 
-        [HttpPost("{documentId}")]
+        [HttpPost()]
         public async Task<IActionResult> Create()
         {
-            var documentId = await _documentService.CreateAsync();
+            using StreamReader sr = new StreamReader(Request.Body);
+            var content = await sr.ReadToEndAsync();
+
+            // just for testing
+            if (string.IsNullOrEmpty(content))
+                content = "{\"type\": \"doc\",\"content\": [{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"hello\"}]}]}";
+            
+            var documentId = await _documentService.CreateAsync(content);
             return Ok(documentId);
         }
     }

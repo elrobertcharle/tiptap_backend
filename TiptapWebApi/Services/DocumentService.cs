@@ -1,6 +1,5 @@
 ﻿using DiffMatchPatch;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using TiptapWebApi.Database;
 
 namespace TiptapWebApi.Services
@@ -8,7 +7,7 @@ namespace TiptapWebApi.Services
     public interface IDocumentService
     {
         Task<bool> ExistsAsync(int documentId);
-        Task<int> CreateAsync();
+        Task<int> CreateAsync(string content);
         Task UpdateAsync(int documentId, List<Patch> patches);
         Task UpdateAsync(int documentId, string patches);
     }
@@ -26,11 +25,11 @@ namespace TiptapWebApi.Services
             return await _dbContext.Documents.AnyAsync(d => d.Id == documentId);
         }
 
-        public async Task<int> CreateAsync()
+        public async Task<int> CreateAsync(string content)
         {
             var document = new Database.Document
             {
-                Content = ""
+                Content = content
             };
             _dbContext.Add(document);
             await _dbContext.SaveChangesAsync();
@@ -43,14 +42,31 @@ namespace TiptapWebApi.Services
             if (document == null)
                 throw new InvalidOperationException($"The document with Id={documentId} does not exist.");
             var dmp = new diff_match_patch();
-            dmp.patch_apply(patches, document.Content);
+            document.Content = (string)dmp.patch_apply(patches, document.Content)[0];
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(int documentId, string patches)
         {
             var dmp = new diff_match_patch();
-            await UpdateAsync(documentId, dmp.patch_fromText(patches));
+            var s1 = "hello";
+            var s2 = "hella";
+            var diff = dmp.diff_main(s1, s2);
+            dmp.diff_cleanupEfficiency(diff);
+            var patch = dmp.patch_make(s1, diff);
+            var content = (string)dmp.patch_apply(patch, s1)[0];
+            var patchStr = dmp.patch_toText(patch);
+            var patch2 = dmp.patch_fromText(patchStr);
+
+            try
+            {
+
+                await UpdateAsync(documentId, dmp.patch_fromText(patches));
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }
